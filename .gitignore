@@ -1,0 +1,17 @@
+# Dependencies
+**/node_modules/
+
+# Env files
+**/.env
+**/.env.*
+
+# Prisma generated
+**/src/generated/prisma
+
+# Build outputs
+**/dist
+**/build
+
+# OS / Editor
+.DS_Store
+.vscode/
