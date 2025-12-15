@@ -1,21 +1,19 @@
-### Health Check
-GET http://localhost:5000/health
-
-### Register User
-POST http://localhost:5000/api/v1/auth/register
+### Create Task
+POST http://localhost:5000/api/v1/tasks
 Content-Type: application/json
+Cookie: token=YOUR_TOKEN_HERE
 
 {
-  "email": "test@example.com",
-  "password": "password123",
-  "name": "Test User"
+  "title": "Build API",
+  "description": "Complete the task management API",
+  "dueDate": "2025-12-20T10:00:00Z",
+  "priority": "HIGH"
 }
 
-### Login User
-POST http://localhost:5000/api/v1/auth/login
-Content-Type: application/json
+### Get All Tasks
+GET http://localhost:5000/api/v1/tasks
+Cookie: token=YOUR_TOKEN_HERE
 
-{
-  "email": "test@example.com",
-  "password": "password123"
-}
+### Get Dashboard
+GET http://localhost:5000/api/v1/tasks/dashboard
+Cookie: token=YOUR_TOKEN_HERE
