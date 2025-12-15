@@ -3,7 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.routes';
-import taskRoutes from './routes/task.routes';  // ← ADD THIS
+import taskRoutes from './routes/task.routes';
+import userRoutes from './routes/user.routes';  // ← ADD THIS
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.get('/health', (req: Request, res: Response) => {
 
 // API Routes
 app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/tasks', taskRoutes);  // ← ADD THIS
+app.use('/api/v1/tasks', taskRoutes);
+app.use('/api/v1/users', userRoutes);  // ← ADD THIS
 
 export default app;

@@ -1,19 +1,12 @@
-### Create Task
-POST http://localhost:5000/api/v1/tasks
+### Get Profile
+GET http://localhost:5000/api/v1/users/profile
+Cookie: token=YOUR_TOKEN_HERE
+
+### Update Profile
+PUT http://localhost:5000/api/v1/users/profile
 Content-Type: application/json
 Cookie: token=YOUR_TOKEN_HERE
 
 {
-  "title": "Build API",
-  "description": "Complete the task management API",
-  "dueDate": "2025-12-20T10:00:00Z",
-  "priority": "HIGH"
+  "name": "Updated Name"
 }
-
-### Get All Tasks
-GET http://localhost:5000/api/v1/tasks
-Cookie: token=YOUR_TOKEN_HERE
-
-### Get Dashboard
-GET http://localhost:5000/api/v1/tasks/dashboard
-Cookie: token=YOUR_TOKEN_HERE

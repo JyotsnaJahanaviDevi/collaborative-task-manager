@@ -1,6 +1,7 @@
 import app from './app';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import { initializeTaskSocket } from './socket/taskSocket';
 
 const PORT = process.env.PORT || 5000;
 
@@ -15,14 +16,8 @@ const io = new Server(httpServer, {
   },
 });
 
-// Socket.io connection handling
-io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
-
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-  });
-});
+// Initialize socket handlers
+initializeTaskSocket(io);
 
 // Make io accessible to routes
 app.set('io', io);

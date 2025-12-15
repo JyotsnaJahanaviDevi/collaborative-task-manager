@@ -60,7 +60,13 @@ export class TaskService {
       updateData.dueDate = new Date(data.dueDate);
     }
 
-    return this.taskRepository.update(id, updateData);
+    const updatedTask = await this.taskRepository.update(id, updateData);
+
+    // Return task with assignment info for notification
+    return {
+      ...updatedTask,
+      wasAssigned: data.assignedToId && data.assignedToId !== task.assignedToId,
+    };
   }
 
   /**

@@ -65,30 +65,40 @@ export class TaskController {
   };
 
   /**
-   * Update task
-   */
-  updateTask = async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-      const validatedData = updateTaskSchema.parse(req.body);
-      const task = await this.taskService.updateTask(req.params.id, validatedData, req.user!.userId);
+ * Update task
+ */
+updateTask = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const validatedData = updateTaskSchema.parse(req.body);
+    const result = await this.taskService.updateTask(req.params.id, validatedData, req.user!.userId);
 
-      // Emit Socket.io event
-      const io = req.app.get('io');
-      io.emit('task:updated', task);
+    // Emit Socket.io event for task update
+    const io = req.app.get('io');
+    io.emit('task:updated', result);
 
-      res.status(200).json({ success: true, data: task });
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        res.status(400).json({ success: false, message: error.errors[0].message });
-      } else if (error.message === 'Task not found') {
-        res.status(404).json({ success: false, message: error.message });
-      } else if (error.message.includes('Unauthorized')) {
-        res.status(403).json({ success: false, message: error.message });
-      } else {
-        res.status(400).json({ success: false, message: error.message });
-      }
+    // If task was assigned, emit notification
+    if (result.wasAssigned && result.assignedToId) {
+      io.to(`user:${result.assignedToId}`).emit('notification:assignment', {
+        message: `You have been assigned to task: ${result.title}`,
+        task: result,
+        timestamp: new Date(),
+      });
     }
-  };
+
+    res.status(200).json({ success: true, data: result });
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      res.status(400).json({ success: false, message: error.errors[0].message });
+    } else if (error.message === 'Task not found') {
+      res.status(404).json({ success: false, message: error.message });
+    } else if (error.message.includes('Unauthorized')) {
+      res.status(403).json({ success: false, message: error.message });
+    } else {
+      res.status(400).json({ success: false, message: error.message });
+    }
+  }
+};
+
 
   /**
    * Delete task
