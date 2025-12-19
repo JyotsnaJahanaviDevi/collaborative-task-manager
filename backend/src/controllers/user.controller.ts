@@ -35,8 +35,8 @@ export class UserController {
           createdAt: user.createdAt,
         },
       });
-    } catch (error: any) {
-      res.status(400).json({ success: false, message: error.message });
+    } catch (error) {
+      res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Unknown error' });
     }
   };
 
@@ -57,12 +57,48 @@ export class UserController {
           name: user.name,
         },
       });
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        res.status(400).json({ success: false, message: error.errors[0].message });
+    } catch (error) {
+      if (error instanceof Error && 'name' in error && error.name === 'ZodError') {
+        res.status(400).json({ success: false, message: (error as any).errors[0].message });
       } else {
-        res.status(400).json({ success: false, message: error.message });
+        res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Unknown error' });
       }
+    }
+  };
+
+  /**
+   * Get all users (for task assignment)
+   */
+  getAllUsers = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const users = await this.userRepository.findAll();
+      
+      res.status(200).json({
+        success: true,
+        data: users.map(user => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        })),
+      });
+    } catch (error) {
+      res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  };
+
+  /**
+   * Delete user account
+   */
+  deleteAccount = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      await this.userRepository.delete(req.user!.userId);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Account deleted successfully',
+      });
+    } catch (error) {
+      res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Unknown error' });
     }
   };
 }

@@ -31,7 +31,7 @@ export class AuthService {
     });
 
     // Generate token
-    const token = generateToken({ userId: user.id, email: user.email });
+    const token = generateToken({ userId: user.id, email: user.email, name: user.name });
 
     return {
       user: {
@@ -60,7 +60,7 @@ export class AuthService {
     }
 
     // Generate token
-    const token = generateToken({ userId: user.id, email: user.email });
+    const token = generateToken({ userId: user.id, email: user.email, name: user.name });
 
     return {
       user: {

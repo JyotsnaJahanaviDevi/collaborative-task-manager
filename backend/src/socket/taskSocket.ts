@@ -4,31 +4,40 @@ interface UserSocket extends Socket {
   userId?: string;
 }
 
+interface TaskAssignData {
+  taskId: string;
+  assignedToId: string;
+  task: {
+    title: string;
+    creator?: {
+      name: string;
+    };
+  };
+}
+
 /**
  * Initialize task-related socket events
  */
 export const initializeTaskSocket = (io: Server) => {
   io.on('connection', (socket: UserSocket) => {
-    console.log('User connected:', socket.id);
-
     // User joins their personal room for notifications
     socket.on('join', (userId: string) => {
       socket.userId = userId;
       socket.join(`user:${userId}`);
-      console.log(`User ${userId} joined their room`);
     });
 
     // Broadcast task assignment notification
-    socket.on('task:assign', (data: { taskId: string; assignedToId: string; task: any }) => {
-      io.to(`user:${data.assignedToId}`).emit('notification:assignment', {
-        message: `You have been assigned to task: ${data.task.title}`,
-        task: data.task,
-        timestamp: new Date(),
+    socket.on('task:assign', (data: TaskAssignData) => {
+      // Emit to the assigned user
+      io.to(`user:${data.assignedToId}`).emit('task-assigned', {
+        taskId: data.taskId,
+        taskTitle: data.task.title,
+        assignedBy: data.task.creator?.name || 'Someone',
       });
     });
 
     socket.on('disconnect', () => {
-      console.log('User disconnected:', socket.id);
+      // Connection closed
     });
   });
 };

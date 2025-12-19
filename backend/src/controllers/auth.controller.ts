@@ -33,11 +33,11 @@ export class AuthController {
         data: result.user,
         token: result.token,
       });
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        res.status(400).json({ success: false, message: error.errors[0].message });
+    } catch (error) {
+      if (error instanceof Error && 'name' in error && error.name === 'ZodError') {
+        res.status(400).json({ success: false, message: (error as any).errors[0].message });
       } else {
-        res.status(400).json({ success: false, message: error.message });
+        res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Unknown error' });
       }
     }
   };
@@ -66,11 +66,11 @@ export class AuthController {
         data: result.user,
         token: result.token,
       });
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        res.status(400).json({ success: false, message: error.errors[0].message });
+    } catch (error) {
+      if (error instanceof Error && 'name' in error && error.name === 'ZodError') {
+        res.status(400).json({ success: false, message: (error as any).errors[0].message });
       } else {
-        res.status(401).json({ success: false, message: error.message });
+        res.status(401).json({ success: false, message: error instanceof Error ? error.message : 'Unknown error' });
       }
     }
   };

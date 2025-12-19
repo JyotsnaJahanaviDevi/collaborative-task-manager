@@ -32,4 +32,26 @@ export class UserRepository {
   async update(id: string, data: { name?: string }): Promise<User> {
     return prisma.user.update({ where: { id }, data });
   }
+
+  /**
+   * Get all users
+   */
+  async findAll(): Promise<User[]> {
+    return prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        password: false, // Exclude password
+      },
+    }) as Promise<User[]>;
+  }
+
+  /**
+   * Delete a user
+   */
+  async delete(id: string): Promise<User> {
+    return prisma.user.delete({ where: { id } });
+  }
 }

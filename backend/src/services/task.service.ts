@@ -50,12 +50,16 @@ export class TaskService {
       throw new Error('Task not found');
     }
 
-    // Only creator can update task
-    if (task.creatorId !== userId) {
+    // Allow creator, assigned user, or anyone if task is unassigned
+    const canUpdate = task.creatorId === userId || 
+                     task.assignedToId === userId || 
+                     !task.assignedToId;
+    
+    if (!canUpdate) {
       throw new Error('Unauthorized to update this task');
     }
 
-    const updateData: any = { ...data };
+    const updateData: Record<string, unknown> = { ...data };
     if (data.dueDate) {
       updateData.dueDate = new Date(data.dueDate);
     }
@@ -78,8 +82,12 @@ export class TaskService {
       throw new Error('Task not found');
     }
 
-    // Only creator can delete task
-    if (task.creatorId !== userId) {
+    // Allow creator, assigned user, or anyone if task is unassigned
+    const canDelete = task.creatorId === userId || 
+                     task.assignedToId === userId || 
+                     !task.assignedToId;
+    
+    if (!canDelete) {
       throw new Error('Unauthorized to delete this task');
     }
 
@@ -101,5 +109,12 @@ export class TaskService {
       createdTasks,
       overdueTasks,
     };
+  }
+
+  /**
+   * Get overdue tasks for a user (assigned or created)
+   */
+  async getOverdueTasks(userId: string) {
+    return this.taskRepository.findOverdue(userId);
   }
 }
