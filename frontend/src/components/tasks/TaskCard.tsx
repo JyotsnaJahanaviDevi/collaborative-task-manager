@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Calendar, User, AlertCircle, Edit2, Trash2 } from 'lucide-react';
+import { Calendar, Users, AlertCircle, Edit2, Trash2 } from 'lucide-react';
 import type { Task } from '../../types';
 import { format, isPast } from 'date-fns';
 
@@ -11,17 +11,17 @@ interface TaskCardProps {
 }
 
 const priorityColors = {
-  LOW: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  MEDIUM: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  HIGH: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-  URGENT: 'bg-red-500/20 text-red-400 border-red-500/30',
+  LOW: 'bg-blue-100 text-blue-700 border-blue-300',
+  MEDIUM: 'bg-yellow-100 text-yellow-700 border-yellow-300',
+  HIGH: 'bg-orange-100 text-orange-700 border-orange-300',
+  URGENT: 'bg-red-100 text-red-700 border-red-300',
 };
 
 const statusColors = {
-  TODO: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
-  IN_PROGRESS: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  REVIEW: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  COMPLETED: 'bg-green-500/20 text-green-400 border-green-500/30',
+  TODO: 'bg-slate-100 text-slate-700 border-slate-300',
+  IN_PROGRESS: 'bg-blue-100 text-blue-700 border-blue-300',
+  REVIEW: 'bg-purple-100 text-purple-700 border-purple-300',
+  COMPLETED: 'bg-green-100 text-green-700 border-green-300',
 };
 
 const priorityLabels = {
@@ -65,10 +65,10 @@ export default function TaskCard({ task, onClick, onEdit, onDelete }: TaskCardPr
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
             {task.title}
           </h3>
-          <p className="text-gray-400 text-sm line-clamp-2">
+          <p className="text-gray-600 text-sm line-clamp-2">
             {task.description}
           </p>
         </div>
@@ -109,7 +109,7 @@ export default function TaskCard({ task, onClick, onEdit, onDelete }: TaskCardPr
           {statusLabels[task.status]}
         </span>
         {isOverdue && (
-          <span className="px-3 py-1 rounded-lg text-xs font-medium border bg-red-500/20 text-red-400 border-red-500/30 flex items-center gap-1">
+          <span className="px-3 py-1 rounded-lg text-xs font-medium border bg-red-100 text-red-700 border-red-300 flex items-center gap-1">
             <AlertCircle size={12} />
             Overdue
           </span>
@@ -122,10 +122,14 @@ export default function TaskCard({ task, onClick, onEdit, onDelete }: TaskCardPr
           <Calendar size={16} />
           <span>{format(new Date(task.dueDate), 'MMM dd, yyyy')}</span>
         </div>
-        {task.assignedTo && (
+        {task.assignees && task.assignees.length > 0 && (
           <div className="flex items-center gap-2">
-            <User size={16} />
-            <span>{task.assignedTo.name}</span>
+            <Users size={16} />
+            <span>
+              {task.assignees.length === 1
+                ? task.assignees[0].user.name
+                : `${task.assignees.length} assignees`}
+            </span>
           </div>
         )}
       </div>

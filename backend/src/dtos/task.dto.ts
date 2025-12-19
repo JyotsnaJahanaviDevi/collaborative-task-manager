@@ -5,7 +5,7 @@ export const createTaskSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   dueDate: z.string().datetime('Invalid date format'),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
-  assignedToId: z.string().optional(),
+  assigneeIds: z.array(z.string()).optional(), // Multiple assignees
 });
 
 export const updateTaskSchema = z.object({
@@ -14,7 +14,7 @@ export const updateTaskSchema = z.object({
   dueDate: z.string().datetime().optional(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
   status: z.enum(['TODO', 'IN_PROGRESS', 'REVIEW', 'COMPLETED']).optional(),
-  assignedToId: z.string().nullable().optional(),
+  assigneeIds: z.array(z.string()).optional(), // Multiple assignees
 });
 
 export type CreateTaskDto = z.infer<typeof createTaskSchema>;

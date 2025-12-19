@@ -114,3 +114,36 @@ export const tasksAPI = {
     return response.data;
   },
 };
+
+// Teams API
+export const teamsAPI = {
+  getAll: async () => {
+    const response = await api.get('/teams');
+    return response.data;
+  },
+
+  getById: async (id: string) => {
+    const response = await api.get(`/teams/${id}`);
+    return response.data;
+  },
+
+  create: async (data: { name: string; description?: string }) => {
+    const response = await api.post('/teams', data);
+    return response.data;
+  },
+
+  delete: async (id: string) => {
+    const response = await api.delete(`/teams/${id}`);
+    return response.data;
+  },
+
+  addMember: async (teamId: string, data: { userId: string; role?: string }) => {
+    const response = await api.post(`/teams/${teamId}/members`, data);
+    return response.data;
+  },
+
+  removeMember: async (teamId: string, userId: string) => {
+    const response = await api.delete(`/teams/${teamId}/members/${userId}`);
+    return response.data;
+  },
+};

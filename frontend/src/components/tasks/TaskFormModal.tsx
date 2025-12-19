@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { Task } from '../../types';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
@@ -17,7 +17,6 @@ const taskSchema = z.object({
   dueDate: z.string().min(1, 'Due date is required'),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
   status: z.enum(['TODO', 'IN_PROGRESS', 'REVIEW', 'COMPLETED']),
-  assignedToId: z.string().optional(),
 });
 
 type TaskFormData = z.infer<typeof taskSchema>;
@@ -30,6 +29,8 @@ interface TaskFormModalProps {
 }
 
 export default function TaskFormModal({ isOpen, onClose, task, onSuccess }: TaskFormModalProps) {
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  
   const {
     register,
     handleSubmit,
@@ -56,8 +57,9 @@ export default function TaskFormModal({ isOpen, onClose, task, onSuccess }: Task
         dueDate: task.dueDate.split('T')[0],
         priority: task.priority,
         status: task.status,
-        assignedToId: task.assignedToId || '',
       });
+      // Set selected assignees
+      setSelectedUserIds(task.assignees?.map(a => a.userId) || []);
     } else {
       reset({
         title: '',
@@ -65,8 +67,8 @@ export default function TaskFormModal({ isOpen, onClose, task, onSuccess }: Task
         dueDate: '',
         priority: 'MEDIUM',
         status: 'TODO',
-        assignedToId: '',
       });
+      setSelectedUserIds([]);
     }
   }, [task, reset]);
 
@@ -75,8 +77,7 @@ export default function TaskFormModal({ isOpen, onClose, task, onSuccess }: Task
       const formattedData = {
         ...data,
         dueDate: new Date(data.dueDate).toISOString(),
-        // Remove empty assignedToId
-        assignedToId: data.assignedToId && data.assignedToId.trim() !== '' ? data.assignedToId : undefined,
+        assigneeIds: selectedUserIds.length > 0 ? selectedUserIds : undefined,
       };
 
       if (task) {
@@ -105,11 +106,11 @@ export default function TaskFormModal({ isOpen, onClose, task, onSuccess }: Task
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl p-8 max-h-[90vh] overflow-y-auto"
+        className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl p-8 max-h-[90vh] overflow-y-auto custom-scrollbar"
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-pastel-mint via-pastel-lavender to-pastel-sky bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
             {task ? 'Edit Task' : 'Create New Task'}
           </h2>
           <button
@@ -195,24 +196,38 @@ export default function TaskFormModal({ isOpen, onClose, task, onSuccess }: Task
             </div>
           </div>
 
-          {/* Assign To (Optional) */}
+          {/* Assign To (Multiple Users) */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Assign To (Optional)
+              Assign To (Multiple Users)
             </label>
-            <select
-              {...register('assignedToId')}
-              className="w-full px-4 py-3 rounded-2xl bg-white border-2 border-gray-200 text-gray-800 focus:outline-none focus:border-pastel-mint hover:border-gray-300 transition-all shadow-sm"
-            >
-              <option value="">-- Unassigned --</option>
+            <div className="space-y-2 max-h-48 overflow-y-auto border-2 border-gray-200 rounded-2xl p-3">
               {users.map((user: any) => (
-                <option key={user.id} value={user.id}>
-                  {user.name} ({user.email})
-                </option>
+                <label key={user.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedUserIds.includes(user.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedUserIds([...selectedUserIds, user.id]);
+                      } else {
+                        setSelectedUserIds(selectedUserIds.filter(id => id !== user.id));
+                      }
+                    }}
+                    className="w-4 h-4 text-pastel-mint border-gray-300 rounded focus:ring-pastel-mint"
+                  />
+                  <span className="text-sm text-gray-700 font-medium">{user.name}</span>
+                  <span className="text-xs text-gray-500">({user.email})</span>
+                </label>
               ))}
-            </select>
+              {users.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-2">No users available</p>
+              )}
+            </div>
             <p className="mt-2 text-xs text-gray-600 font-medium">
-              Select a team member to assign this task
+              {selectedUserIds.length === 0
+                ? 'Select team members to assign this task'
+                : `${selectedUserIds.length} user(s) selected`}
             </p>
           </div>
 

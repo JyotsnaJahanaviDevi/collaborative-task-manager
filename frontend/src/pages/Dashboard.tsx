@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 export default function Dashboard() {
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
+  const [selectedFilter, setSelectedFilter] = useState<'all' | 'assigned' | 'created' | 'overdue' | 'inProgress'>('all');
   
   // Single API call for all dashboard data - much faster!
   const { data, isLoading, mutate } = useSWR(
@@ -55,6 +56,24 @@ export default function Dashboard() {
     setEditingTask(undefined);
   };
 
+  // Get filtered tasks based on selection
+  const getFilteredTasks = () => {
+    switch (selectedFilter) {
+      case 'assigned':
+        return myTasks;
+      case 'created':
+        return createdTasks;
+      case 'overdue':
+        return overdueTasks;
+      case 'inProgress':
+        return myTasks?.filter((t: Task) => t.status === 'IN_PROGRESS') || [];
+      default:
+        return myTasks;
+    }
+  };
+
+  const filteredTasks = getFilteredTasks();
+
   const stats = [
     {
       icon: CheckSquare,
@@ -62,6 +81,7 @@ export default function Dashboard() {
       value: myTasks?.length || 0,
       gradient: 'from-pastel-sky/80 via-pastel-lavender/80 to-pastel-lilac/80',
       iconBg: 'bg-gradient-to-br from-pastel-sky to-pastel-lavender',
+      filter: 'assigned' as const,
     },
     {
       icon: TrendingUp,
@@ -69,6 +89,7 @@ export default function Dashboard() {
       value: createdTasks?.length || 0,
       gradient: 'from-pastel-mint/80 via-pastel-sage/80 to-accent-mint/80',
       iconBg: 'bg-gradient-to-br from-pastel-mint to-accent-mint',
+      filter: 'created' as const,
     },
     {
       icon: AlertCircle,
@@ -76,6 +97,7 @@ export default function Dashboard() {
       value: overdueTasks?.length || 0,
       gradient: 'from-pastel-rose/80 via-pastel-peach/80 to-accent-peach/80',
       iconBg: 'bg-gradient-to-br from-pastel-rose to-accent-peach',
+      filter: 'overdue' as const,
     },
     {
       icon: Clock,
@@ -83,6 +105,7 @@ export default function Dashboard() {
       value: myTasks?.filter((t: Task) => t.status === 'IN_PROGRESS').length || 0,
       gradient: 'from-pastel-lavender/80 via-pastel-lilac/80 to-accent-lavender/80',
       iconBg: 'bg-gradient-to-br from-pastel-lavender to-accent-lavender',
+      filter: 'inProgress' as const,
     },
   ];
 
@@ -93,10 +116,10 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-pastel-mint via-pastel-lavender to-pastel-sky bg-clip-text text-transparent mb-2">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
               Dashboard
             </h1>
-            <p className="text-gray-600 text-lg">Welcome back! Here's your task overview.</p>
+            <p className="text-gray-700 text-lg">Welcome back! Here's your task overview.</p>
           </div>
           <Button onClick={() => setShowTaskModal(true)}>
             <Plus size={20} />
@@ -107,8 +130,13 @@ export default function Dashboard() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, index) => (
-            <div key={index}>
-              <Card hover className="cursor-pointer bg-gradient-to-br from-white/95 to-white/90 border-2 border-white/50">
+            <div key={index} onClick={() => setSelectedFilter(stat.filter)}>
+              <Card 
+                hover 
+                className={`cursor-pointer bg-gradient-to-br from-white/95 to-white/90 border-2 transition-all ${
+                  selectedFilter === stat.filter ? 'border-blue-400 shadow-lg' : 'border-white/50'
+                }`}
+              >
                 <div className="flex items-center gap-4">
                   <div className={`w-16 h-16 rounded-3xl ${stat.iconBg} flex items-center justify-center shadow-xl`}>
                     <stat.icon className="w-8 h-8 text-white" />
@@ -125,55 +153,31 @@ export default function Dashboard() {
 
         {/* Recent Tasks */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* My Tasks */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
+          {/* Filtered Tasks */}
+          <div className="lg:col-span-2">
+            <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold flex items-center gap-2">
                 <CheckSquare className="text-blue-400" />
-                My Tasks
+                {selectedFilter === 'assigned' && 'Assigned to Me'}
+                {selectedFilter === 'created' && 'Created by Me'}
+                {selectedFilter === 'overdue' && 'Overdue Tasks'}
+                {selectedFilter === 'inProgress' && 'In Progress'}
+                {selectedFilter === 'all' && 'My Tasks'}
               </h2>
               <Link to="/tasks" className="text-sm text-blue-400 hover:text-blue-300">
                 View all →
               </Link>
             </div>
-            <div className="space-y-4">
-              {myTasks && myTasks.length > 0 ? (
-                myTasks.slice(0, 3).map((task: Task) => (
-                  <TaskCard key={task.id} task={task} onEdit={handleEdit} onDelete={handleDelete} />
-                ))
-              ) : createdTasks && createdTasks.length > 0 ? (
-                <>
-                  <Card>
-                    <p className="text-gray-400 text-sm mb-3">No tasks assigned to you. Showing tasks you created:</p>
-                  </Card>
-                  {createdTasks.slice(0, 3).map((task: Task) => (
-                    <TaskCard key={task.id} task={task} onEdit={handleEdit} onDelete={handleDelete} />
-                  ))}
-                </>
-              ) : (
-                <Card>
-                  <p className="text-gray-400 text-center py-8">No tasks yet</p>
-                </Card>
-              )}
-            </div>
-          </div>
-
-          {/* Overdue Tasks */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold flex items-center gap-2">
-                <AlertCircle className="text-red-400" />
-                Overdue Tasks
-              </h2>
-            </div>
-            <div className="space-y-4">
-              {overdueTasks && overdueTasks.length > 0 ? (
-                overdueTasks.slice(0, 3).map((task: Task) => (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {filteredTasks && filteredTasks.length > 0 ? (
+                filteredTasks.slice(0, 6).map((task: Task) => (
                   <TaskCard key={task.id} task={task} onEdit={handleEdit} onDelete={handleDelete} />
                 ))
               ) : (
-                <Card>
-                  <p className="text-gray-400 text-center py-8">🎉 No overdue tasks!</p>
+                <Card className="lg:col-span-2">
+                  <p className="text-gray-400 text-center py-8">
+                    {selectedFilter === 'overdue' ? '🎉 No overdue tasks!' : 'No tasks in this category'}
+                  </p>
                 </Card>
               )}
             </div>

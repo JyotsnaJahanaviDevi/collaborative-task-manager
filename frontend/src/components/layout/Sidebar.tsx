@@ -4,7 +4,8 @@ import {
   Bell, 
   Settings, 
   LogOut,
-  Sparkles 
+  Sparkles,
+  Users
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -14,6 +15,7 @@ import toast from 'react-hot-toast';
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
   { icon: CheckSquare, label: 'All Tasks', path: '/tasks' },
+  { icon: Users, label: 'Teams', path: '/teams' },
   { icon: Bell, label: 'Notifications', path: '/notifications', showBadge: true },
   { icon: Settings, label: 'Profile', path: '/profile' },
 ];
@@ -38,7 +40,7 @@ export default function Sidebar() {
           <Sparkles className="w-7 h-7 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-pastel-mint via-pastel-lavender to-pastel-sky bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
             TaskFlow
           </h1>
           <p className="text-xs text-gray-500 font-medium">Collaborate Better</p>

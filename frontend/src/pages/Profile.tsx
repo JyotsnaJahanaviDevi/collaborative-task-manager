@@ -75,7 +75,7 @@ export default function Profile() {
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold gradient-text">Profile Settings</h1>
+          <h1 className="text-5xl font-bold gradient-text">Profile Settings</h1>
           <p className="text-gray-400 mt-1">Manage your account information</p>
         </div>
 
@@ -97,10 +97,11 @@ export default function Profile() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
                   Full Name
                 </label>
                 <Input
+                  id="name"
                   {...register('name')}
                   placeholder="Enter your name"
                   disabled={!isEditing}
@@ -110,36 +111,22 @@ export default function Profile() {
 
               {/* Email (Read-only) */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                   Email Address
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                   <input
+                    id="email"
                     type="email"
                     value={user.email}
                     disabled
+                    readOnly
                     className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-gray-400 cursor-not-allowed"
                   />
                 </div>
                 <p className="mt-1 text-xs text-gray-500">
                   Email cannot be changed
-                </p>
-              </div>
-
-              {/* User ID (Read-only) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  User ID
-                </label>
-                <input
-                  type="text"
-                  value={user.id}
-                  disabled
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-gray-400 font-mono text-sm cursor-not-allowed"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Share this ID with others to be assigned tasks
                 </p>
               </div>
 
@@ -153,7 +140,10 @@ export default function Profile() {
                     </Button>
                     <Button
                       type="button"
-                      onClick={() => setIsEditing(false)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setIsEditing(false);
+                      }}
                       variant="outline"
                       className="flex-1"
                     >
@@ -163,7 +153,10 @@ export default function Profile() {
                 ) : (
                   <Button
                     type="button"
-                    onClick={() => setIsEditing(true)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsEditing(true);
+                    }}
                     className="w-full"
                   >
                     Edit Profile
@@ -173,12 +166,6 @@ export default function Profile() {
             </form>
           </div>
         </Card>
-
-        {/* Account Info */}
-        <Card>
-          <h3 className="text-lg font-semibold mb-4">Account Information</h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between items-center py-2 border-b border-white/10">
 
         {/* Danger Zone */}
         <Card className="border-red-500/50">
@@ -195,23 +182,6 @@ export default function Profile() {
               <Trash2 size={20} />
               {isDeleting ? 'Deleting Account...' : 'Delete Account'}
             </Button>
-          </div>
-        </Card>
-              <span className="text-gray-400">Account Created</span>
-              <span className="text-white">
-                {new Date(user.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-gray-400">Account Status</span>
-              <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">
-                Active
-              </span>
-            </div>
           </div>
         </Card>
       </div>

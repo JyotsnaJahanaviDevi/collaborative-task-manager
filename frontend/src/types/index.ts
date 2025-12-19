@@ -5,6 +5,14 @@ export interface User {
   createdAt: string;
 }
 
+export interface TaskAssignment {
+  id: string;
+  taskId: string;
+  userId: string;
+  user: User;
+  createdAt: string;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -13,9 +21,8 @@ export interface Task {
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
   status: 'TODO' | 'IN_PROGRESS' | 'REVIEW' | 'COMPLETED';
   creatorId: string;
-  assignedToId: string;
   creator?: User;
-  assignedTo?: User;
+  assignees?: TaskAssignment[];
   createdAt: string;
   updatedAt: string;
 }

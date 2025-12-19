@@ -4,7 +4,8 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.routes';
 import taskRoutes from './routes/task.routes';
-import userRoutes from './routes/user.routes';  // ← ADD THIS
+import userRoutes from './routes/user.routes';
+import teamRoutes from './routes/team.routes';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.get('/health', (req: Request, res: Response) => {
 // API Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/tasks', taskRoutes);
-app.use('/api/v1/users', userRoutes);  // ← ADD THIS
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/teams', teamRoutes);
 
 export default app;

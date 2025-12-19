@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
+import Teams from './pages/Teams';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
 
@@ -39,6 +40,14 @@ function App() {
         element={
           <PrivateRoute>
             <Tasks />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/teams"
+        element={
+          <PrivateRoute>
+            <Teams />
           </PrivateRoute>
         }
       />

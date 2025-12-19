@@ -16,16 +16,17 @@ export default function Notifications() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold gradient-text flex items-center gap-3">
-              <Bell size={32} />
-              Notifications
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-5xl font-bold gradient-text">
+                Notifications
+              </h1>
               {unreadCount > 0 && (
                 <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-sm">
                   {unreadCount} new
                 </span>
               )}
-            </h1>
-            <p className="text-gray-400 mt-1">
+            </div>
+            <p className="text-gray-700 mt-1">
               Stay updated with task assignments and changes
             </p>
           </div>

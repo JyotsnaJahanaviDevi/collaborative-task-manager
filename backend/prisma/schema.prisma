@@ -15,8 +15,10 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  createdTasks  Task[] @relation("TaskCreator")
-  assignedTasks Task[] @relation("TaskAssignee")
+  createdTasks  Task[]           @relation("TaskCreator")
+  assignedTasks TaskAssignment[]
+  createdTeams  Team[]           @relation("TeamCreator")
+  teamMembers   TeamMember[]
 
   @@map("users")
 }
@@ -32,14 +34,60 @@ model Task {
   updatedAt   DateTime @updatedAt
 
   // Foreign Keys
-  creatorId    String
-  assignedToId String?
+  creatorId String
+  teamId    String?
 
   // Relations
-  creator    User  @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  assignedTo User? @relation("TaskAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  creator   User             @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  assignees TaskAssignment[]
+  team      Team?            @relation(fields: [teamId], references: [id], onDelete: SetNull)
 
   @@map("tasks")
+}
+
+model TaskAssignment {
+  id         String   @id @default(cuid())
+  taskId     String
+  userId     String
+  assignedAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+  @@map("task_assignments")
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Foreign Keys
+  creatorId String
+
+  // Relations
+  creator User         @relation("TeamCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  members TeamMember[]
+  tasks   Task[]
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id       String   @id @default(cuid())
+  teamId   String
+  userId   String
+  role     String   @default("member") // 'admin' or 'member'
+  joinedAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_members")
 }
 
 enum Priority {

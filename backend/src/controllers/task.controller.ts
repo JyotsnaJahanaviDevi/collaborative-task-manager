@@ -23,18 +23,30 @@ export class TaskController {
       const io = req.app.get('io');
       io.emit('task-created', task);
 
-      // If task is assigned, notify the assignee
-      if (task.assignedToId) {
-        io.to(`user:${task.assignedToId}`).emit('task-assigned', {
-          taskId: task.id,
-          taskTitle: task.title,
-          assignedBy: req.user!.name || 'Someone',
+      // If task is assigned, notify all assignees
+      if (task.assignees && task.assignees.length > 0) {
+        task.assignees.forEach(assignment => {
+          io.to(`user:${assignment.user.id}`).emit('task-assigned', {
+            taskId: task.id,
+            taskTitle: task.title,
+            assignedBy: req.user!.name || 'Someone',
+          });
         });
       }
 
       res.status(201).json({ success: true, data: task });
     } catch (error) {
       console.error('❌ Create task error:', error);
+      
+      // Handle foreign key constraint errors (user doesn't exist)
+      if (error instanceof Error && 'code' in error && (error as any).code === 'P2003') {
+        res.status(401).json({ 
+          success: false, 
+          message: 'Your session is invalid. Please log out and log in again.' 
+        });
+        return;
+      }
+      
       if (error instanceof Error && 'name' in error && error.name === 'ZodError') {
         res.status(400).json({ success: false, message: (error as any).errors[0].message });
       } else {
@@ -85,18 +97,20 @@ updateTask = async (req: AuthRequest, res: Response): Promise<void> => {
 
     // Emit Socket.io event for task update
     const io = req.app.get('io');
-    io.emit('task-updated', result);
+    io.emit('task-updated', result.task);
 
-    // If task was assigned, emit notification
-    if (result.wasAssigned && result.assignedToId) {
-      io.to(`user:${result.assignedToId}`).emit('task-assigned', {
-        taskId: result.id,
-        taskTitle: result.title,
-        assignedBy: req.user!.name || 'Someone',
+    // Notify newly assigned users
+    if (result.newlyAssignedUserIds && result.newlyAssignedUserIds.length > 0) {
+      result.newlyAssignedUserIds.forEach(userId => {
+        io.to(`user:${userId}`).emit('task-assigned', {
+          taskId: result.task.id,
+          taskTitle: result.task.title,
+          assignedBy: req.user!.name || 'Someone',
+        });
       });
     }
 
-    res.status(200).json({ success: true, data: result });
+    res.status(200).json({ success: true, data: result.task });
   } catch (error) {
     if (error instanceof Error && 'name' in error && error.name === 'ZodError') {
       res.status(400).json({ success: false, message: (error as any).errors[0].message });

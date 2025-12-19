@@ -4,6 +4,7 @@ import DashboardLayout from '../components/layout/DashboardLayout';
 import TaskCard from '../components/tasks/TaskCard';
 import TaskFormModal from '../components/tasks/TaskFormModal';
 import Button from '../components/ui/Button';
+import Select from '../components/ui/Select';
 import { useTasks } from '../hooks/useTasks';
 import { useTaskRealtime } from '../hooks/useTaskRealtime';
 import { TopLoadingBar } from '../components/ui/TopLoadingBar';
@@ -71,8 +72,8 @@ export default function Tasks() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold gradient-text">All Tasks</h1>
-            <p className="text-gray-400 mt-1">
+            <h1 className="text-5xl font-bold gradient-text">All Tasks</h1>
+            <p className="text-gray-700 mt-1">
               Manage and organize your team's tasks
             </p>
           </div>
@@ -130,60 +131,45 @@ export default function Tasks() {
 
           {/* Filter Options */}
           {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-white/10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Status Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Status
-                  </label>
-                  <select
-                    value={filters.status || 'all'}
-                    onChange={(e) => handleFilterChange('status', e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="TODO">To Do</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="REVIEW">Review</option>
-                    <option value="COMPLETED">Completed</option>
-                  </select>
-                </div>
+                <Select
+                  label="Status"
+                  value={filters.status || 'all'}
+                  onChange={(e) => handleFilterChange('status', e.target.value)}
+                >
+                  <option value="all">All Status</option>
+                  <option value="TODO">To Do</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="REVIEW">Review</option>
+                  <option value="COMPLETED">Completed</option>
+                </Select>
 
                 {/* Priority Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Priority
-                  </label>
-                  <select
-                    value={filters.priority || 'all'}
-                    onChange={(e) => handleFilterChange('priority', e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-                  >
-                    <option value="all">All Priorities</option>
-                    <option value="LOW">Low</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="HIGH">High</option>
-                    <option value="URGENT">Urgent</option>
-                  </select>
-                </div>
+                <Select
+                  label="Priority"
+                  value={filters.priority || 'all'}
+                  onChange={(e) => handleFilterChange('priority', e.target.value)}
+                >
+                  <option value="all">All Priorities</option>
+                  <option value="LOW">Low</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="HIGH">High</option>
+                  <option value="URGENT">Urgent</option>
+                </Select>
 
                 {/* Sort By */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Sort By
-                  </label>
-                  <select
-                    value={filters.sortBy || 'all'}
-                    onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-                  >
-                    <option value="all">Default</option>
-                    <option value="dueDate-asc">Due Date (Earliest)</option>
-                    <option value="dueDate-desc">Due Date (Latest)</option>
-                    <option value="priority">Priority</option>
-                    <option value="createdAt">Created Date</option>
-                  </select>
-                </div>
+                <Select
+                  label="Sort By"
+                  value={filters.sortBy || 'all'}
+                  onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                >
+                  <option value="all">Default</option>
+                  <option value="dueDate-asc">Due Date (Earliest)</option>
+                  <option value="dueDate-desc">Due Date (Latest)</option>
+                  <option value="priority">Priority</option>
+                  <option value="createdAt">Created Date</option>
+                </Select>
             </div>
           )
         }
