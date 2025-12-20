@@ -75,8 +75,10 @@ export default function Profile() {
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-5xl font-bold gradient-text">Profile Settings</h1>
-          <p className="text-gray-400 mt-1">Manage your account information</p>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold gradient-text leading-tight break-words">
+            Profile Settings
+          </h1>
+          <p className="text-gray-600 mt-2">Manage your account information</p>
         </div>
 
         {/* Profile Card */}

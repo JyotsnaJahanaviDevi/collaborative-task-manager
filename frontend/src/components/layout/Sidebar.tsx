@@ -7,10 +7,15 @@ import {
   Sparkles,
   Users
 } from 'lucide-react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import toast from 'react-hot-toast';
+
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
@@ -20,7 +25,7 @@ const navItems = [
   { icon: Settings, label: 'Profile', path: '/profile' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const { user, logout } = useAuth();
   const { unreadCount } = useNotifications();
   const navigate = useNavigate();
@@ -29,13 +34,25 @@ export default function Sidebar() {
     logout();
     toast.success('Logged out successfully');
     navigate('/login');
+    onClose?.();
   };
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-white/90 backdrop-blur-xl border-r border-gray-200/50 p-6 flex flex-col z-30 shadow-xl">
+    <>
+      <div
+        className={`fixed inset-0 bg-black/40 z-20 transition-opacity md:hidden ${
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={onClose}
+      />
+      <aside
+        className={`fixed left-0 top-0 h-screen w-64 bg-white/95 backdrop-blur-xl border-r border-gray-200/50 p-6 flex flex-col z-30 shadow-xl transition-transform md:translate-x-0 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
 
       {/* Logo */}
-      <div className="flex items-center gap-3 mb-8">
+      <Link to="/dashboard" onClick={onClose} className="flex items-center gap-3 mb-8">
         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pastel-mint to-pastel-lavender flex items-center justify-center shadow-lg">
           <Sparkles className="w-7 h-7 text-white" />
         </div>
@@ -45,7 +62,7 @@ export default function Sidebar() {
           </h1>
           <p className="text-xs text-gray-500 font-medium">Collaborate Better</p>
         </div>
-      </div>
+      </Link>
 
       {/* User Info */}
       <div className="bg-gradient-to-br from-pastel-cream/80 to-pastel-peach/40 border border-pastel-peach/30 rounded-2xl p-4 mb-6 shadow-md">
@@ -66,6 +83,7 @@ export default function Sidebar() {
           <NavLink
             key={item.path}
             to={item.path}
+            onClick={onClose}
             className={({ isActive }) =>
               `flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                 isActive
@@ -99,6 +117,7 @@ export default function Sidebar() {
         <LogOut size={22} strokeWidth={2.5} />
         <span className="font-medium">Logout</span>
       </button>
-    </aside>
+      </aside>
+    </>
   );
 }
