@@ -2,14 +2,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { Task } from '../../types';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import { tasksAPI, usersAPI } from '../../lib/api';
 import toast from 'react-hot-toast';
-import useSWR from 'swr';
 
 const taskSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title must be less than 100 characters'),
@@ -26,10 +25,14 @@ interface TaskFormModalProps {
   onClose: () => void;
   task?: Task;
   onSuccess: () => void;
+  teamId?: string;
 }
 
-export default function TaskFormModal({ isOpen, onClose, task, onSuccess }: TaskFormModalProps) {
-  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+export default function TaskFormModal({ isOpen, onClose, task, onSuccess, teamId }: TaskFormModalProps) {
+  const [assigneeEmail, setAssigneeEmail] = useState('');
+  const [searchedUser, setSearchedUser] = useState<any>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [assignedToId, setAssignedToId] = useState<string | null>(null);
   
   const {
     register,
@@ -45,8 +48,42 @@ export default function TaskFormModal({ isOpen, onClose, task, onSuccess }: Task
   });
 
   // Fetch all users for assignment dropdown
-  const { data: usersData } = useSWR('/users', usersAPI.getAll);
-  const users = usersData?.data || [];
+  const handleSearchUser = async () => {
+    if (!assigneeEmail.trim()) {
+      toast.error('Please enter an email address');
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await usersAPI.searchByEmail(assigneeEmail.trim());
+      setSearchedUser(response.data);
+      toast.success('User found!');
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        toast.error('No user found with this email');
+      } else {
+        toast.error('Failed to search user');
+      }
+      setSearchedUser(null);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleAssignUser = () => {
+    if (searchedUser) {
+      setAssignedToId(searchedUser.id);
+      toast.success(`Assigned to ${searchedUser.name}`);
+      setAssigneeEmail('');
+      setSearchedUser(null);
+    }
+  };
+
+  const handleRemoveAssignee = () => {
+    setAssignedToId(null);
+    toast.success('Assignee removed');
+  };
 
   // Update form when task changes
   useEffect(() => {
@@ -59,7 +96,7 @@ export default function TaskFormModal({ isOpen, onClose, task, onSuccess }: Task
         status: task.status,
       });
       // Set selected assignees
-      setSelectedUserIds(task.assignees?.map(a => a.userId) || []);
+      setAssignedToId(task.assignedTo?.id || null);
     } else {
       reset({
         title: '',
@@ -68,7 +105,7 @@ export default function TaskFormModal({ isOpen, onClose, task, onSuccess }: Task
         priority: 'MEDIUM',
         status: 'TODO',
       });
-      setSelectedUserIds([]);
+      setAssignedToId(null);
     }
   }, [task, reset]);
 
@@ -77,7 +114,7 @@ export default function TaskFormModal({ isOpen, onClose, task, onSuccess }: Task
       const formattedData = {
         ...data,
         dueDate: new Date(data.dueDate).toISOString(),
-        assigneeIds: selectedUserIds.length > 0 ? selectedUserIds : undefined,
+        assignedToId: assignedToId || undefined,
       };
 
       if (task) {
@@ -86,7 +123,11 @@ export default function TaskFormModal({ isOpen, onClose, task, onSuccess }: Task
       } else {
         // Remove status for create - backend will set default
         const { status, ...createData } = formattedData;
-        await tasksAPI.create(createData);
+        const createPayload = {
+          ...createData,
+          teamId: teamId || undefined,
+        };
+        await tasksAPI.create(createPayload);
         toast.success('Task created successfully!');
       }
 
@@ -196,39 +237,79 @@ export default function TaskFormModal({ isOpen, onClose, task, onSuccess }: Task
             </div>
           </div>
 
-          {/* Assign To (Multiple Users) */}
+          {/* Assign To (Email Search) */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Assign To (Multiple Users)
+              Assign To (Single User)
             </label>
-            <div className="space-y-2 max-h-48 overflow-y-auto border-2 border-gray-200 rounded-2xl p-3">
-              {users.map((user: any) => (
-                <label key={user.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedUserIds.includes(user.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedUserIds([...selectedUserIds, user.id]);
-                      } else {
-                        setSelectedUserIds(selectedUserIds.filter(id => id !== user.id));
-                      }
-                    }}
-                    className="w-4 h-4 text-pastel-mint border-gray-300 rounded focus:ring-pastel-mint"
-                  />
-                  <span className="text-sm text-gray-700 font-medium">{user.name}</span>
-                  <span className="text-xs text-gray-500">({user.email})</span>
-                </label>
-              ))}
-              {users.length === 0 && (
-                <p className="text-sm text-gray-500 text-center py-2">No users available</p>
-              )}
-            </div>
-            <p className="mt-2 text-xs text-gray-600 font-medium">
-              {selectedUserIds.length === 0
-                ? 'Select team members to assign this task'
-                : `${selectedUserIds.length} user(s) selected`}
-            </p>
+            
+            {/* Current Assignee */}
+            {assignedToId && (
+              <div className="mb-3 p-3 bg-pastel-mint/20 border-2 border-pastel-mint rounded-2xl flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">
+                    {task?.assignedTo?.name || searchedUser?.name}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {task?.assignedTo?.email || searchedUser?.email}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemoveAssignee}
+                  className="text-red-500 hover:text-red-700 text-sm font-medium"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+
+            {/* Email Search */}
+            {!assignedToId && (
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Input
+                      type="email"
+                      value={assigneeEmail}
+                      onChange={(e) => setAssigneeEmail(e.target.value)}
+                      placeholder="Enter user email (e.g., user@example.com)"
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleSearchUser())}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={handleSearchUser}
+                    disabled={isSearching}
+                    className="px-6"
+                  >
+                    <Search size={18} />
+                    {isSearching ? 'Searching...' : 'Search'}
+                  </Button>
+                </div>
+
+                {/* Search Result */}
+                {searchedUser && (
+                  <div className="p-3 bg-gray-50 border-2 border-gray-200 rounded-2xl flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">{searchedUser.name}</p>
+                      <p className="text-xs text-gray-600">{searchedUser.email}</p>
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={handleAssignUser}
+                      size="sm"
+                    >
+                      Assign
+                    </Button>
+                  </div>
+                )}
+
+                <p className="text-xs text-gray-600 font-medium">
+                  💡 Enter the complete email address to search for a user
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Actions */}

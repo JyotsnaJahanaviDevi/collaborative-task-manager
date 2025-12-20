@@ -61,6 +61,11 @@ export const usersAPI = {
     return response.data;
   },
   
+  searchByEmail: async (email: string) => {
+    const response = await api.get('/users/search', { params: { email } });
+    return response.data;
+  },
+  
   deleteAccount: async () => {
     const response = await api.delete('/users/profile');
     return response.data;
@@ -69,7 +74,7 @@ export const usersAPI = {
 
 // Tasks API
 export const tasksAPI = {
-  getAll: async (filters?: { status?: string; priority?: string; sortBy?: string }) => {
+  getAll: async (filters?: { status?: string; priority?: string; sortBy?: string; teamId?: string }) => {
     const response = await api.get('/tasks', { params: filters });
     return response.data;
   },
@@ -127,8 +132,13 @@ export const teamsAPI = {
     return response.data;
   },
 
-  create: async (data: { name: string; description?: string }) => {
+  create: async (data: { name: string; description?: string; memberIds?: string[] }) => {
     const response = await api.post('/teams', data);
+    return response.data;
+  },
+
+  update: async (id: string, data: { name?: string; description?: string }) => {
+    const response = await api.put(`/teams/${id}`, data);
     return response.data;
   },
 
@@ -144,6 +154,34 @@ export const teamsAPI = {
 
   removeMember: async (teamId: string, userId: string) => {
     const response = await api.delete(`/teams/${teamId}/members/${userId}`);
+    return response.data;
+  },
+};
+
+// Notifications API
+export const notificationsAPI = {
+  getAll: async () => {
+    const response = await api.get('/notifications');
+    return response.data;
+  },
+
+  markAsRead: async (id: string) => {
+    const response = await api.put(`/notifications/${id}/read`);
+    return response.data;
+  },
+
+  markAllAsRead: async () => {
+    const response = await api.put('/notifications/read-all');
+    return response.data;
+  },
+
+  delete: async (id: string) => {
+    const response = await api.delete(`/notifications/${id}`);
+    return response.data;
+  },
+
+  clearAll: async () => {
+    const response = await api.delete('/notifications');
     return response.data;
   },
 };

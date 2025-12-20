@@ -87,6 +87,38 @@ export class UserController {
   };
 
   /**
+   * Search users by email
+   */
+  searchByEmail = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { email } = req.query;
+      
+      if (!email || typeof email !== 'string') {
+        res.status(400).json({ success: false, message: 'Email query parameter is required' });
+        return;
+      }
+
+      const user = await this.userRepository.findByEmail(email);
+      
+      if (!user) {
+        res.status(404).json({ success: false, message: 'User not found' });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        },
+      });
+    } catch (error) {
+      res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  };
+
+  /**
    * Delete user account
    */
   deleteAccount = async (req: AuthRequest, res: Response): Promise<void> => {

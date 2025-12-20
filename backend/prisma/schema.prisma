@@ -7,71 +7,53 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  createdTasks  Task[]           @relation("TaskCreator")
-  assignedTasks TaskAssignment[]
-  createdTeams  Team[]           @relation("TeamCreator")
-  teamMembers   TeamMember[]
+  id                  String           @id @default(cuid())
+  email               String           @unique
+  password            String
+  name                String
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  assignedTasks       Task[]           @relation("TaskAssignee")
+  createdTasks        Task[]           @relation("TaskCreator")
+  sentInvitations     TeamInvitation[] @relation("SentInvitations")
+  receivedInvitations TeamInvitation[] @relation("ReceivedInvitations")
+  teamMembers         TeamMember[]
+  createdTeams        Team[]           @relation("TeamCreator")
+  notifications       Notification[]
 
   @@map("users")
 }
 
 model Task {
-  id          String   @id @default(cuid())
-  title       String   @db.VarChar(100)
-  description String   @db.Text
-  dueDate     DateTime
-  priority    Priority @default(MEDIUM)
-  status      Status   @default(TODO)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Foreign Keys
-  creatorId String
-  teamId    String?
-
-  // Relations
-  creator   User             @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  assignees TaskAssignment[]
-  team      Team?            @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  id           String   @id @default(cuid())
+  title        String   @db.VarChar(100)
+  description  String
+  dueDate      DateTime
+  priority     Priority @default(MEDIUM)
+  status       Status   @default(TODO)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  creatorId    String
+  assignedToId String?
+  teamId       String?
+  assignedTo   User?    @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  creator      User     @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  team         Team?    @relation(fields: [teamId], references: [id])
 
   @@map("tasks")
 }
 
-model TaskAssignment {
-  id         String   @id @default(cuid())
-  taskId     String
-  userId     String
-  assignedAt DateTime @default(now())
-
-  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([taskId, userId])
-  @@map("task_assignments")
-}
-
 model Team {
-  id          String   @id @default(cuid())
-  name        String   @db.VarChar(100)
-  description String?  @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Foreign Keys
-  creatorId String
-
-  // Relations
-  creator User         @relation("TeamCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  members TeamMember[]
-  tasks   Task[]
+  id          String           @id @default(cuid())
+  name        String           @db.VarChar(100)
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  creatorId   String
+  tasks       Task[]
+  invitations TeamInvitation[]
+  members     TeamMember[]
+  creator     User             @relation("TeamCreator", fields: [creatorId], references: [id], onDelete: Cascade)
 
   @@map("teams")
 }
@@ -80,14 +62,48 @@ model TeamMember {
   id       String   @id @default(cuid())
   teamId   String
   userId   String
-  role     String   @default("member") // 'admin' or 'member'
+  role     String   @default("member")
   joinedAt DateTime @default(now())
-
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([teamId, userId])
   @@map("team_members")
+}
+
+model TeamInvitation {
+  id        String           @id @default(cuid())
+  teamId    String
+  userId    String
+  invitedBy String
+  message   String?
+  status    InvitationStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  inviter   User             @relation("SentInvitations", fields: [invitedBy], references: [id], onDelete: Cascade)
+  team      Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  invitee   User             @relation("ReceivedInvitations", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_invitations")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  message   String
+  type      String   @default("info")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }
 
 enum Priority {

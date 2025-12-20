@@ -5,14 +5,15 @@ export interface TaskFilters {
   status?: Status;
   priority?: Priority;
   creatorId?: string;
-  assignedToUserId?: string;
+  assignedToId?: string;
+  teamId?: string;
   sortBy?: 'dueDate' | 'createdAt';
   sortOrder?: 'asc' | 'desc';
 }
 
-export interface TaskWithAssignees extends Task {
+export interface TaskWithRelations extends Task {
   creator: { id: string; name: string; email: string };
-  assignees: Array<{ user: { id: string; name: string; email: string } }>;
+  assignedTo: { id: string; name: string; email: string } | null;
 }
 
 /**
@@ -20,7 +21,7 @@ export interface TaskWithAssignees extends Task {
  */
 export class TaskRepository {
   /**
-   * Create a new task with assignees
+   * Create a new task
    */
   async create(data: {
     title: string;
@@ -28,106 +29,65 @@ export class TaskRepository {
     dueDate: Date;
     priority: Priority;
     creatorId: string;
-    assigneeIds?: string[];
-  }): Promise<TaskWithAssignees> {
-    const { assigneeIds, ...taskData } = data;
-    
+    assignedToId?: string;
+    teamId?: string;
+  }): Promise<TaskWithRelations> {
     return prisma.task.create({
-      data: {
-        ...taskData,
-        assignees: assigneeIds?.length
-          ? {
-              create: assigneeIds.map(userId => ({ userId })),
-            }
-          : undefined,
-      },
+      data,
       include: {
         creator: { select: { id: true, name: true, email: true } },
-        assignees: {
-          include: {
-            user: { select: { id: true, name: true, email: true } },
-          },
-        },
+        assignedTo: { select: { id: true, name: true, email: true } },
       },
-    }) as Promise<TaskWithAssignees>;
+    }) as Promise<TaskWithRelations>;
   }
 
   /**
    * Find all tasks with filters
    */
-  async findAll(filters: TaskFilters): Promise<TaskWithAssignees[]> {
-    const { status, priority, creatorId, assignedToUserId, sortBy = 'dueDate', sortOrder = 'asc' } = filters;
+  async findAll(filters: TaskFilters): Promise<TaskWithRelations[]> {
+    const { status, priority, creatorId, assignedToId, teamId, sortBy = 'dueDate', sortOrder = 'asc' } = filters;
 
     return prisma.task.findMany({
       where: {
         ...(status && { status }),
         ...(priority && { priority }),
         ...(creatorId && { creatorId }),
-        ...(assignedToUserId && {
-          assignees: {
-            some: { userId: assignedToUserId },
-          },
-        }),
+        ...(assignedToId && { assignedToId }),
+        ...(teamId && { teamId }),
       },
       include: {
         creator: { select: { id: true, name: true, email: true } },
-        assignees: {
-          include: {
-            user: { select: { id: true, name: true, email: true } },
-          },
-        },
+        assignedTo: { select: { id: true, name: true, email: true } },
       },
       orderBy: { [sortBy]: sortOrder },
-    }) as Promise<TaskWithAssignees[]>;
+    }) as Promise<TaskWithRelations[]>;
   }
 
   /**
    * Find task by ID
    */
-  async findById(id: string): Promise<TaskWithAssignees | null> {
+  async findById(id: string): Promise<TaskWithRelations | null> {
     return prisma.task.findUnique({
       where: { id },
       include: {
         creator: { select: { id: true, name: true, email: true } },
-        assignees: {
-          include: {
-            user: { select: { id: true, name: true, email: true } },
-          },
-        },
+        assignedTo: { select: { id: true, name: true, email: true } },
       },
-    }) as Promise<TaskWithAssignees | null>;
+    }) as Promise<TaskWithRelations | null>;
   }
 
   /**
    * Update task
    */
-  async update(id: string, data: Partial<Task> & { assigneeIds?: string[] }): Promise<TaskWithAssignees> {
-    const { assigneeIds, ...taskData } = data;
-    
-    // If assigneeIds provided, update assignments
-    if (assigneeIds !== undefined) {
-      // Delete existing assignments and create new ones
-      await prisma.taskAssignment.deleteMany({ where: { taskId: id } });
-      
-      if (assigneeIds.length > 0) {
-        await prisma.taskAssignment.createMany({
-          data: assigneeIds.map(userId => ({ taskId: id, userId })),
-        });
-      }
-    }
-    
+  async update(id: string, data: Partial<Task>): Promise<TaskWithRelations> {
     return prisma.task.update({
       where: { id },
-      data: taskData,
+      data,
       include: {
         creator: { select: { id: true, name: true, email: true } },
-        assignees: {
-          include: {
-            user: { select: { id: true, name: true, email: true } },
-          },
-        },
+        assignedTo: { select: { id: true, name: true, email: true } },
       },
-    }) as Promise<TaskWithAssignees>;
+    }) as Promise<TaskWithRelations>;
   }
 
   /**
@@ -140,26 +100,22 @@ export class TaskRepository {
   /**
    * Get overdue tasks for a user
    */
-  async findOverdue(userId: string): Promise<TaskWithAssignees[]> {
+  async findOverdue(userId: string): Promise<TaskWithRelations[]> {
     const now = new Date();
     return prisma.task.findMany({
       where: {
         OR: [
           { creatorId: userId },
-          { assignees: { some: { userId } } },
+          { assignedToId: userId },
         ],
         dueDate: { lt: now },
         status: { not: 'COMPLETED' },
       },
       include: {
         creator: { select: { id: true, name: true, email: true } },
-        assignees: {
-          include: {
-            user: { select: { id: true, name: true, email: true } },
-          },
-        },
+        assignedTo: { select: { id: true, name: true, email: true } },
       },
       orderBy: { dueDate: 'asc' },
-    }) as Promise<TaskWithAssignees[]>;
+    }) as Promise<TaskWithRelations[]>;
   }
 }

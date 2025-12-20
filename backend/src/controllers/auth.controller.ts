@@ -34,10 +34,20 @@ export class AuthController {
         token: result.token,
       });
     } catch (error) {
+      console.error('Registration error:', error);
       if (error instanceof Error && 'name' in error && error.name === 'ZodError') {
-        res.status(400).json({ success: false, message: (error as any).errors[0].message });
+        const zodError = error as any;
+        res.status(400).json({ 
+          success: false, 
+          message: zodError.errors[0].message,
+          errors: zodError.errors 
+        });
       } else {
-        res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Unknown error' });
+        res.status(400).json({ 
+          success: false, 
+          message: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.stack : String(error)
+        });
       }
     }
   };

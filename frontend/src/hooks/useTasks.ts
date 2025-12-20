@@ -2,7 +2,7 @@ import useSWR from 'swr';
 import type { Task } from '../types';
 import { tasksAPI } from '../lib/api';
 
-export function useTasks(filters?: { status?: string; priority?: string; sortBy?: string }) {
+export function useTasks(filters?: { status?: string; priority?: string; sortBy?: string; teamId?: string }) {
   const { data, error, isLoading, mutate } = useSWR(
     ['/tasks', filters],
     () => tasksAPI.getAll(filters),

@@ -585,13 +585,19 @@ describe('AuthService', () => {
    CLIENT_URL=https://your-frontend-url.vercel.app
    NODE_ENV=production
    ```
+   - `CLIENT_URL` supports a comma-separated list for multiple frontends.
 
 3. **Build Command**
    ```bash
    npm run build
    ```
 
-4. **Start Command**
+4. **Run Migrations**
+   ```bash
+   npm run prisma:deploy
+   ```
+
+5. **Start Command**
    ```bash
    npm start
    ```

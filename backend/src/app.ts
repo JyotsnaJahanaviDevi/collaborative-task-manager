@@ -6,14 +6,19 @@ import authRoutes from './routes/auth.routes';
 import taskRoutes from './routes/task.routes';
 import userRoutes from './routes/user.routes';
 import teamRoutes from './routes/team.routes';
+import notificationRoutes from './routes/notification.routes';
 
 dotenv.config();
 
 const app: Application = express();
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: allowedOrigins,
   credentials: true,
 }));
 app.use(express.json());
@@ -30,5 +35,6 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/tasks', taskRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/teams', teamRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
 
 export default app;

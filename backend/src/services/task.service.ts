@@ -18,7 +18,8 @@ export class TaskService {
       dueDate: new Date(data.dueDate),
       priority: data.priority as Priority,
       creatorId,
-      assigneeIds: data.assigneeIds,
+      assignedToId: data.assignedToId,
+      teamId: data.teamId,
     });
 
     return task;
@@ -51,11 +52,8 @@ export class TaskService {
       throw new Error('Task not found');
     }
 
-    // Allow creator, assigned user, or anyone if task is unassigned
-    const isAssignee = task.assignees?.some(a => a.user.id === userId);
-    const canUpdate = task.creatorId === userId || 
-                     isAssignee || 
-                     task.assignees?.length === 0;
+    // Allow creator or assigned user to update
+    const canUpdate = task.creatorId === userId || task.assignedToId === userId;
     
     if (!canUpdate) {
       throw new Error('Unauthorized to update this task');
@@ -66,18 +64,17 @@ export class TaskService {
       updateData.dueDate = new Date(data.dueDate);
     }
     
-    // Get previous assignees to check for new assignments
-    const previousAssigneeIds = task.assignees?.map(a => a.user.id) || [];
+    // Check if assignee changed
+    const previousAssigneeId = task.assignedToId;
+    const newAssigneeId = data.assignedToId;
+    const assigneeChanged = newAssigneeId !== undefined && newAssigneeId !== previousAssigneeId;
 
     const updatedTask = await this.taskRepository.update(id, updateData);
 
-    // Return task with assignment info for notification
-    const newAssigneeIds = data.assigneeIds || [];
-    const addedAssignees = newAssigneeIds.filter(id => !previousAssigneeIds.includes(id));
-    
     return {
       ...updatedTask,
-      newlyAssignedUserIds: addedAssignees,
+      assigneeChanged,
+      newAssigneeId: assigneeChanged ? newAssigneeId : null,
     };
   }
 
@@ -90,17 +87,12 @@ export class TaskService {
       throw new Error('Task not found');
     }
 
-    // Allow creator or assigned users to delete
-    const isAssignee = task.assignees?.some(a => a.user.id === userId);
-    const canDelete = task.creatorId === userId || 
-                     isAssignee || 
-                     task.assignees?.length === 0;
-    
-    if (!canDelete) {
+    // Only creator can delete
+    if (task.creatorId !== userId) {
       throw new Error('Unauthorized to delete this task');
     }
 
-    return this.taskRepository.delete(id);
+    await this.taskRepository.delete(id);
   }
 
   /**
@@ -108,7 +100,7 @@ export class TaskService {
    */
   async getDashboard(userId: string) {
     const [assignedTasks, createdTasks, overdueTasks] = await Promise.all([
-      this.taskRepository.findAll({ assignedToUserId: userId }),
+      this.taskRepository.findAll({ assignedToId: userId }),
       this.taskRepository.findAll({ creatorId: userId }),
       this.taskRepository.findOverdue(userId),
     ]);

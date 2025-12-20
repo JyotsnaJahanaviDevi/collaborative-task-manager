@@ -5,17 +5,12 @@ import { authenticate } from '../middleware/auth.middleware';
 const router = Router();
 const teamController = new TeamController();
 
-// All routes require authentication
-router.use(authenticate);
-
-// Team routes
-router.post('/', teamController.createTeam);
-router.get('/', teamController.getTeams);
-router.get('/:id', teamController.getTeamById);
-router.delete('/:id', teamController.deleteTeam);
-
-// Member management
-router.post('/:id/members', teamController.addMember);
-router.delete('/:id/members/:userId', teamController.removeMember);
+router.post('/', authenticate, teamController.createTeam);
+router.get('/', authenticate, teamController.getTeams);
+router.get('/:id', authenticate, teamController.getTeam);
+router.put('/:id', authenticate, teamController.updateTeam);
+router.delete('/:id', authenticate, teamController.deleteTeam);
+router.post('/:id/members', authenticate, teamController.addMember);
+router.delete('/:id/members/:userId', authenticate, teamController.removeMember);
 
 export default router;

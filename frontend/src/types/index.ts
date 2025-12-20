@@ -22,6 +22,9 @@ export interface Task {
   status: 'TODO' | 'IN_PROGRESS' | 'REVIEW' | 'COMPLETED';
   creatorId: string;
   creator?: User;
+  assignedTo?: User | null;
+  assignedToId?: string | null;
+  teamId?: string | null;
   assignees?: TaskAssignment[];
   createdAt: string;
   updatedAt: string;
