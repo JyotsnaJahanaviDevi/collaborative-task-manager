@@ -37,7 +37,14 @@ export default function Login() {
       toast.success('Welcome back! 👋');
       navigate('/dashboard');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Login failed');
+      const status = error?.response?.status;
+      const serverMessage = error?.response?.data?.message as string | undefined;
+      const isInvalidCredentials = serverMessage?.toLowerCase().includes('invalid');
+      if (status === 401 || status === 404 || isInvalidCredentials) {
+        toast.error("No account found yet—let's get you signed up!");
+      } else {
+        toast.error(serverMessage || 'Login failed');
+      }
     } finally {
       setIsLoading(false);
     }
