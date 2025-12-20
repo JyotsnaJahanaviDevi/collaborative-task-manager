@@ -74,7 +74,7 @@ export default function Login() {
               <Sparkles className="w-10 h-10 text-white" />
             </motion.div>
             <h1 className="text-4xl font-bold mb-3">
-              <span className="bg-gradient-to-r from-pastel-mint via-pastel-lavender to-pastel-sky bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-700 via-indigo-600 to-sky-600 bg-clip-text text-transparent">
                 Welcome Back
               </span>
             </h1>
